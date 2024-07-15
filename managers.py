@@ -112,3 +112,14 @@ class CaptureManager(object):
         # Release the frame.
         self._frame = None
         self._enteredFrame = False
+    def writeImage(self, fileName):
+        """Write the next exited frame to an image file"""
+        self._imageFilename = fileName
+    def startWritingVideo(self, fileName, encoding = cv.VideoWriter_fourcc('M','J','P','G')):
+        self._videoFilename = fileName
+        self._videoEncoding = encoding
+    def stopWritingVideo(self):
+        """stop writing exited frame to a video file"""
+        self._videoFilename = None
+        self._videoEncoding = None
+        self._videoWriter = None
