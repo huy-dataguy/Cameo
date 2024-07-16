@@ -149,5 +149,30 @@ class CaptureManager(object):
         self._videoWriter.write(self._frame)
 
 
-                
+class WindowManager(object):
+    def __init__(self, windowName, keypressCallback = None):
+        self._windowName = windowName
+        self.keypressCallback = keypressCallback
+        self._isWindowCreated = False
+
+    @property 
+    def isWindowCreated(self):
+        return self._isWindowCreated
+    
+    def createWindow(self):
+        cv.namedWindow(self._windowName)
+        self._isWindowCreated = True
+    def show(self, frame):
+        cv.imshow(self._windowName, frame)
+
+    def destroyWindow(self):
+        cv.destroyWindow(self._windowName)
+        self._isWindowCreated = False
+    def processEvents(self):
+        keycode = cv.waitKey(1)
+
+        if self.keypressCallback is not None and keycode != -1:
+            self.keypressCallback(keycode)
+            ####self.keypressCallback is an ***attribute of the WindowManager class.
+            #  This attribute is assigned a callback function when an instance of WindowManager is initialized. That is self.keypressCallback (attribute ->> assign to a funtion when init) = keypressCallback (functionnn)
 
