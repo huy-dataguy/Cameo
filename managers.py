@@ -5,11 +5,12 @@ import time
 class CaptureManager(object):
     def __init__(self, capture, previewWindowManager = None, 
                  shouldMirrorPreview = False):
+        
         self.previewWindowManager = previewWindowManager
         self.shouldMirrorPreview = shouldMirrorPreview
         self._capture = capture
         self._channel = 0
-        self._enteredFrame = 0
+        self._enteredFrame = False
         self._frame = None
         self._imageFilename = None
         self._videoFilename = None
@@ -78,7 +79,7 @@ class CaptureManager(object):
 
     def exitFrame(self):
         """Draw to the window. Estimate fps. Write file. Release frame"""
-        if(self._frame == None):
+        if self._frame is None:
             self._enteredFrame = False
             return
         
@@ -90,7 +91,7 @@ class CaptureManager(object):
             self._fpsEstimate = self._framesElapsed / timeElapsed
         
         #increase frame to keep track the number frames that have been processed
-        self._frameElapsed += 1
+        self._framesElapsed += 1
 
 
         #Draw window
@@ -98,13 +99,14 @@ class CaptureManager(object):
             if self.shouldMirrorPreview:
                 #flip the frame left to right "fliplr"
                 mirroredFrame = np.fliplr(self._frame)
-                self.shouldMirrorPreview.show(mirroredFrame)
+                self.previewWindowManager.show(mirroredFrame)
             else:
-                self.shouldMirrorPreview.show(self._frame)
+                self.previewWindowManager.show(self._frame)
         
         # Write to the image file, if any.
         if self.isWritingImage:
-            cv.imwrite(self._imageFilename, self._frame)
+            img = np.fliplr(self._frame)
+            cv.imwrite(self._imageFilename, img)
             self._imageFilename = None
        
         # Write to the video file, if any.
@@ -115,6 +117,7 @@ class CaptureManager(object):
     def writeImage(self, fileName):
         """Write the next exited frame to an image file"""
         self._imageFilename = fileName
+
     def startWritingVideo(self, fileName, encoding = cv.VideoWriter_fourcc('M','J','P','G')):
         self._videoFilename = fileName
         self._videoEncoding = encoding
@@ -123,3 +126,56 @@ class CaptureManager(object):
         self._videoFilename = None
         self._videoEncoding = None
         self._videoWriter = None
+
+
+    def _writeVideoFrame(self):
+        if not self.isWritingVideo:
+            return
+        if self._videoWriter is None:
+            fps = self._capture.get(cv.CAP_PROP_FPS)
+
+            #FPS unknown so use estimate fps
+            if fps <= 0.0:
+                if self._framesElapsed <= 20:
+                    return
+                    # wait untill more frame elapse, so estimate is more stable
+
+                else:
+                    fps = self._fpsEstimate
+            size = (int(self._capture.get(
+                        cv.CAP_PROP_FRAME_WIDTH)), 
+                    int(self._capture.get(
+                        cv.CAP_PROP_FRAME_HEIGHT
+                    )))
+            
+            self._videoWriter = cv.VideoWriter(self._videoFilename, self._videoEncoding, fps, size)
+        self._videoWriter.write(self._frame)
+
+
+class WindowManager(object):
+    def __init__(self, windowName, keypressCallback = None):
+        self._windowName = windowName
+        self.keypressCallback = keypressCallback
+        self._isWindowCreated = False
+
+    @property 
+    def isWindowCreated(self):
+        return self._isWindowCreated
+    
+    def createWindow(self):
+        cv.namedWindow(self._windowName)
+        self._isWindowCreated = True
+    def show(self, frame):
+        cv.imshow(self._windowName, frame)
+
+    def destroyWindow(self):
+        cv.destroyWindow(self._windowName)
+        self._isWindowCreated = False
+    def processEvents(self):
+        keycode = cv.waitKey(1)
+
+        if self.keypressCallback is not None and keycode != -1:
+            self.keypressCallback(keycode)
+            ####self.keypressCallback is an ***attribute of the WindowManager class.
+            #  This attribute is assigned a callback function when an instance of WindowManager is initialized. That is self.keypressCallback (attribute ->> assign to a funtion when init) = keypressCallback (functionnn)
+
