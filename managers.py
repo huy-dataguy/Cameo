@@ -123,3 +123,31 @@ class CaptureManager(object):
         self._videoFilename = None
         self._videoEncoding = None
         self._videoWriter = None
+
+
+    def _writeVideoFrame(self):
+        if not self.isWritingVideo:
+            return
+        if self._videoWriter is None:
+            fps = self._capture.get(cv.CAP_PROP_FPS)
+
+            #FPS unknown so use estimate fps
+            if fps <= 0.0:
+                if self._framesElapsed <= 20:
+                    return
+                    # wait untill more frame elapse, so estimate is more stable
+
+                else:
+                    fps = self._fpsEstimate
+            size = (int(self._capture.get(
+                        cv.CAP_PROP_FRAME_WIDTH)), 
+                    int(self._capture.get(
+                        cv.CAP_PROP_FRAME_HEIGHT
+                    )))
+            
+            self._videoWriter = cv.VideoWriter(self._videoFilename, self._videoEncoding, fps, size)
+        self._videoWriter.write(self._frame)
+
+
+                
+
