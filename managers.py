@@ -5,11 +5,12 @@ import time
 class CaptureManager(object):
     def __init__(self, capture, previewWindowManager = None, 
                  shouldMirrorPreview = False):
+        
         self.previewWindowManager = previewWindowManager
         self.shouldMirrorPreview = shouldMirrorPreview
         self._capture = capture
         self._channel = 0
-        self._enteredFrame = 0
+        self._enteredFrame = False
         self._frame = None
         self._imageFilename = None
         self._videoFilename = None
@@ -78,7 +79,7 @@ class CaptureManager(object):
 
     def exitFrame(self):
         """Draw to the window. Estimate fps. Write file. Release frame"""
-        if(self._frame == None):
+        if self._frame is None:
             self._enteredFrame = False
             return
         
@@ -90,7 +91,7 @@ class CaptureManager(object):
             self._fpsEstimate = self._framesElapsed / timeElapsed
         
         #increase frame to keep track the number frames that have been processed
-        self._frameElapsed += 1
+        self._framesElapsed += 1
 
 
         #Draw window
@@ -98,13 +99,14 @@ class CaptureManager(object):
             if self.shouldMirrorPreview:
                 #flip the frame left to right "fliplr"
                 mirroredFrame = np.fliplr(self._frame)
-                self.shouldMirrorPreview.show(mirroredFrame)
+                self.previewWindowManager.show(mirroredFrame)
             else:
-                self.shouldMirrorPreview.show(self._frame)
+                self.previewWindowManager.show(self._frame)
         
         # Write to the image file, if any.
         if self.isWritingImage:
-            cv.imwrite(self._imageFilename, self._frame)
+            img = np.fliplr(self._frame)
+            cv.imwrite(self._imageFilename, img)
             self._imageFilename = None
        
         # Write to the video file, if any.
@@ -115,6 +117,7 @@ class CaptureManager(object):
     def writeImage(self, fileName):
         """Write the next exited frame to an image file"""
         self._imageFilename = fileName
+
     def startWritingVideo(self, fileName, encoding = cv.VideoWriter_fourcc('M','J','P','G')):
         self._videoFilename = fileName
         self._videoEncoding = encoding
