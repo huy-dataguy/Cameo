@@ -71,3 +71,14 @@ class EmbossFilter(VConvolutionFilter):
                               [-1,  1, 1],
                               [ 0,  1, 2]])
         VConvolutionFilter.__init__(self, kernel)
+        
+class Kernel5x5(VConvolutionFilter):
+    def __init__(self):
+        kernel = np.array([[-1, -1, -1, -1, -1],
+                       [-1,  1,  2,  1, -1],
+                       [-1,  2,  4,  2, -1],
+                       [-1,  1,  2,  1, -1],
+                       [-1, -1, -1, -1, -1]])
+        VConvolutionFilter.__init__(self, kernel)
+       
+        

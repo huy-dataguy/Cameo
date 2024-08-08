@@ -7,7 +7,11 @@ class Cameo(object):
         self._windowManager = WindowManager('Cameo', self.onKeypress)
         
         self._captureManager = CaptureManager(cv.VideoCapture(0), self._windowManager, True)
-        self._curveFilter = filters.BGRPortraCurveFilter()
+        # self.filter = filters.SharpenFilter()
+        self.filter = filters.FindEdgesFilter()
+        # self.filter = filters.EmbossFilter()
+        # self.filter = filters.BlurFilter()
+        # self.filter = filters.Kernel5x5()
 
     def run(self):
         """Run main loop"""
@@ -16,9 +20,9 @@ class Cameo(object):
             self._captureManager.enterFrame()
             frame = self._captureManager.frame
             if frame is not None:
-                filters.strokeEdges(frame, frame)
-                self._curveFilter.apply(frame, frame)
-            
+                # filters.strokeEdges(frame, frame)
+                self.filter.apply(frame, frame)
+              
 
             self._captureManager.exitFrame()
             self._windowManager.processEvents()
