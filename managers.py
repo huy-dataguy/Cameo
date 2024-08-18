@@ -4,10 +4,14 @@ import time
 
 class CaptureManager(object):
     def __init__(self, capture, previewWindowManager = None, 
-                 shouldMirrorPreview = False):
+                shouldMirrorPreview = False,
+                shouldConvertBitDepth10To8 = True):
+
         
         self.previewWindowManager = previewWindowManager
         self.shouldMirrorPreview = shouldMirrorPreview
+        self.shouldConvertBitDepth10To8 = \
+                shouldConvertBitDepth10To8
         self._capture = capture
         self._channel = 0
         self._enteredFrame = False
@@ -45,12 +49,23 @@ class CaptureManager(object):
 
     @property
     def frame(self):
-        _, self._frame = self._capture.retrieve(self._frame, self.channel)
-        return self._frame
+        # _, self._frame = self._capture.retrieve(self._frame, self.channel)
+        # return self._frame
         #the underscore _ is often used as a "dummy" variable to discard unnecessary or unimportant values
         #example: tuple_value = (1,2, 3)
         #_, second, _ = tuple_value
         #print(second) # answer: 2
+        
+        if self._enteredFrame and self._frame is None:
+            _, self._frame = self._capture.retrieve(
+                    self._frame, self.channel)
+            if self.shouldConvertBitDepth10To8 and \
+                    self._frame is not None and \
+                    self._frame.dtype == np.uint16:
+                self._frame = (self._frame >> 2).astype(
+                        np.uint8)
+        return self._frame
+        
 
     @property
     def isWritingImage(self):
